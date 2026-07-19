@@ -37,6 +37,20 @@ app.get("/", (req, res) => {
   res.send("Pathak Attendance API is running");
 });
 
+// Make sure the DB connection is ready before any route touches the DB.
+// This avoids the classic serverless race where a request arrives on a
+// cold start before mongoose has finished connecting.
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    res
+      .status(503)
+      .json({ message: "Database unavailable. Please try again shortly." });
+  }
+});
+
 app.use("/api/auth", authRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/attendance", attendanceRoutes);
@@ -52,16 +66,19 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-async function startServer() {
-  await connectDB();
-
-  if (!process.env.VERCEL) {
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+// Locally (not on Vercel) connect once up front and start listening.
+// On Vercel, the per-request middleware above handles connecting.
+if (!process.env.VERCEL) {
+  connectDB()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    })
+    .catch((error) => {
+      console.error("Failed to start server:", error.message);
+      process.exit(1);
     });
-  }
 }
-
-startServer().catch(console.error);
 
 export default app;
