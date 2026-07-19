@@ -5,6 +5,7 @@ import {
   getSummary,
   getPracticedDates,
   getOverallAttendance,
+  deleteAttendanceByDate,
 } from "../controllers/attendanceController.js";
 import { protect } from "../middleware/auth.js";
 
@@ -17,5 +18,6 @@ router.get("/summary", getSummary);
 router.get("/dates", getPracticedDates);
 router.get("/overall", getOverallAttendance);
 router.post("/", markAttendance);
+router.delete("/date/:date", deleteAttendanceByDate);
 
 export default router;

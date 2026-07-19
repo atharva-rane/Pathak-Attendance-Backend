@@ -108,6 +108,25 @@ export const getPracticedDates = async (req, res) => {
   }
 };
 
+// @route DELETE /api/attendance/date/:date
+// Deletes every attendance record for the given date (all students, both
+// Dhol and Tasha), effectively removing that date from "Practiced Dates".
+export const deleteAttendanceByDate = async (req, res) => {
+  try {
+    const { date } = req.params;
+    if (!date) return res.status(400).json({ message: "date param is required" });
+
+    const result = await Attendance.deleteMany({ date });
+    return res.json({
+      message: "Attendance records deleted",
+      date,
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 // @route GET /api/attendance/overall?vadan=Dhol
 // Returns every practiced date (chronological) plus, per student, their
 // attendance on each of those dates and the derived present-count/percentage.
